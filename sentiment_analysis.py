@@ -137,96 +137,58 @@ df_training['Comment'] = df_training['Comment'].apply(all_lowercase)
 df_competition.to_csv('cleaneddatacompetition.csv')
 df_training.to_csv('cleaneddatatraining.csv')
 
-#tf-idf analysis begins here
-#1 vectorize
-# tf-idf algorithm
-vectorize = TfidfVectorizer(
-    lowercase=True,
-    max_features=100,
-    max_df=0.8,
-    min_df=5,
-    ngram_range=(1,3),
-    stop_words="english"
-)
+import pandas as pd
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-#isolate comment text from the numerical data in the data frame
-Comment_data = df_training['Comment'].tolist()
+sentiment_analyzer = SentimentIntensityAnalyzer()
 
-#pass in document
-vectors = vectorize.fit_transform(Comment_data)
-print(vectors[0])
+def get_sentiment(Comment):
+    sentiment_scores = sentiment_analyzer.polarity_scores(Comment)
+    return sentiment_scores['compound']
 
-#get text repersentation of keywords
-feature_names = vectorize.get_feature_names_out()
-print(feature_names[0]) #absolutely most common # results
+df_training['Sentiment'] = df_training['Comment'].apply(get_sentiment)
+df_competition['Sentiment'] = df_competition['Comment'].apply(get_sentiment)
 
-#convert vector into a repersentation of each word and their td-idf score
-dense = vectors.todense()
-print(dense[0])
+print("DataFrame training with Sentiment Scores:")
+print(df_training)
+print("\nDataFrame competition with Sentiment Scores:")
+print(df_competition)
 
-#convert into list form
-denselist = dense.tolist()
-print(denselist[0])
+average_sentinment_training = df_training['Sentiment'].mean()
+average_sentinment_competition = df_competition['Sentiment'].mean()
 
-#covert the numbers into words
-all_keywords = []
-for description in denselist:
-    x=0
-    keywords = []
-    for word in description:
-        if word > 0:
-            keywords.append(feature_names[x])
-        x=x+1
-    all_keywords.append(keywords)
-
-print ("Only Keywords Text:")
-print (all_keywords[0])
-
-#2 K-means clustering
-#find overlap in keywords
-#5 clusters
-true_k = 5
-#create model
-model = KMeans(n_clusters=true_k, init="k-means++", max_iter=100, n_init=1)
-
-#fit vectors to model
-model.fit(vectors)
-#tf-idf as the basis of cluster
-order_centroids = model.cluster_centers_.argsort()[:,::-1]
-terms = vectorize.get_feature_names_out()
-#nuemeric value of clusters
-print(order_centroids)
-
-print(terms[92])
-
-#automate keyword conversion
-i=0
-for cluster in order_centroids:
-    print(f"Cluster {i}")
-    for keyword in cluster[0:10]:
-        print(terms[keyword])
-    print('')
-    i=i+1
+print(average_sentinment_competition)
+print(average_sentinment_training)
 
 #visualisation
-kmean_indicies = model.fit_predict(vectors)
-pca = PCA(n_components=2) #prinicipal component analysis
-scatter_plot_points = pca.fit_transform(vectors.toarray())
+df_training['DataFrame'] = 'Training videos'
+df_competition['DataFrame'] = 'Competition videos'
+combined_df = pd.concat([df_training, df_competition])
+custome_palette = {'Training videos':'#00FF00', 'Competition videos':'#008080'}
 
-colors = ["r", "b", "m", "y", "c"]
-
-x_axis = [o[0] for o in scatter_plot_points]
-y_axis = [o[1] for o in scatter_plot_points]
-
-fig, ax = plt.subplots(figsize=(50,50))
-scatter = ax.scatter(x_axis,y_axis, c=[colors[d] for d in kmean_indicies])
-plt.savefig("scatter_sentimentanalysis.png")
+#box plot is the best chart for this comparison as the relationships and differences are visually clear
+plt.figure(figsize=(10, 6))
+sb.boxplot(x='DataFrame', y='Sentiment', data=combined_df, palette=custome_palette)
+plt.title('Sentiment Comparison Between Two DataFrames')
 plt.show()
 
+#insights 
 
-#conclusions about the data and further reccomendations
-#incomplete I willupdate
+#both of these types of videos have a positive skew to their sentiment scores showing a support fanbase for both youtube channels
+#the training videos have more negative outliers suggestion some negative comments which is to be expected since no one can agree on best training methods
+#the training videos also have a higher median sentiment score than the competition videos 
+#the competition videos have a longer third quartile showing more dispertion of sentiment scores which are closer to neutral
+#the competition video have a bigger minimum range
+
+# reccomendations
+# it is reccomend that more research is conducted into why the sentiment scores of the competion videos have a lower range
+# it is reccomend that an analysis of the outlier comments is conducted to see if any glaring issues can be decerned
+# it is reccomended that that emphsis is put on training video going forward.
 
 #references
 #https://github.com/wjbmattingly/topic_modeling_textbook/blob/main/02_03_setting_up_tf_idf.ipynb
 #https://github.com/analyticswithadam/Python/blob/main/YouTube_Comments_Advanced.ipynb
+#https://www.youtube.com/@elphick.event.ponies
+#https://www.youtube.com/@LifeontheLeftRein
+#https://www.kaggle.com/code/ar5entum/comparing-methods-of-sentiment-analysis
+
