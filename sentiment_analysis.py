@@ -3,15 +3,9 @@ import pandas as pd
 import requests
 from sklearn.feature_extraction.text import re
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cluster import KMeans
-from sklearn.metrics import adjusted_rand_score
-from nltk.corpus import stopwords
-import re
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
+import seaborn as sb
+import numpy as np
 
 # Start with data extraxction
 #These contain all the necessary Keys and details to access youtube comments 
@@ -137,6 +131,8 @@ df_training['Comment'] = df_training['Comment'].apply(all_lowercase)
 df_competition.to_csv('cleaneddatacompetition.csv')
 df_training.to_csv('cleaneddatatraining.csv')
 
+#senitiment analysis begins here
+#sentiment score calculation
 import pandas as pd
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
@@ -184,11 +180,3 @@ plt.show()
 # it is reccomend that more research is conducted into why the sentiment scores of the competion videos have a lower range
 # it is reccomend that an analysis of the outlier comments is conducted to see if any glaring issues can be decerned
 # it is reccomended that that emphsis is put on training video going forward.
-
-#references
-#https://github.com/wjbmattingly/topic_modeling_textbook/blob/main/02_03_setting_up_tf_idf.ipynb
-#https://github.com/analyticswithadam/Python/blob/main/YouTube_Comments_Advanced.ipynb
-#https://www.youtube.com/@elphick.event.ponies
-#https://www.youtube.com/@LifeontheLeftRein
-#https://www.kaggle.com/code/ar5entum/comparing-methods-of-sentiment-analysis
-
